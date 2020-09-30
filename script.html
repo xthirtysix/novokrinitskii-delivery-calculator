@@ -1,0 +1,117 @@
+<style>
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    border: 0;
+    padding: 0;
+    white-space: nowrap;
+    clip-path: inset(100%);
+    clip: rect(0 0 0 0);
+    overflow: hidden;
+  }
+</style>
+<script type="text/javascript">
+  $(document).ready(
+      setTimeout(() => {
+        // Константы
+        const MOSCOW_DELIVERY_PRICE = 400;
+        const COUNTRY_DELIVERY_PRICE = 450;
+        const MOSCOW_REGION_DELIVERY_PRICE = 450;
+        const SAINTP_DELIVERY_PRICE = 450;
+        const DELIVERY_INCREASE = 50;
+        const PICKUP = 100;
+        // DOM-элементы
+        const popup = document.querySelector(".t706__cartwin");
+        const priceElem = popup.querySelector(".t706__cartwin-totalamount-info");
+        // Заказ
+        const totalSum = popup.querySelector('.t-input-group_in');
+        totalSum.classList.add('visually-hidden')
+
+        // Подсчет стоимости доставки
+        const calcDelivery = () => {
+          let order = window.tcart;
+          let deliveryPrice = 0;
+
+          let deliveryTypeElem = priceElem.querySelectorAll('.t706__cartwin-totalamount-info_label')[1];
+          deliveryTypeElem.innerText = "Доставка:";
+          let deliveryValueElem = priceElem.querySelectorAll('.t706__cartwin-totalamount-info_value')[1];
+          deliveryValueElem.innerText = `${deliveryPrice} р.`;
+
+          switch (order.delivery.name) {
+            case "по России":
+              deliveryPrice = COUNTRY_DELIVERY_PRICE * order.total;
+              break;
+            case "по Москве":
+              deliveryPrice =
+                  MOSCOW_DELIVERY_PRICE + order.total * DELIVERY_INCREASE;
+              break;
+            case "Подмосковье":
+              deliveryPrice =
+                  MOSCOW_REGION_DELIVERY_PRICE + order.total * DELIVERY_INCREASE;
+              break;
+            case "Санкт-Петербург и ЛО":
+              deliveryPrice =
+                  SAINTP_DELIVERY_PRICE + order.total * DELIVERY_INCREASE;
+              break;
+            case "самовывоз":
+              deliveryPrice = PICKUP;
+              break;
+            case "за границу":
+              deliveryPrice = 10;
+              break;
+          }
+
+          order.delivery.price = deliveryPrice;
+
+          if (deliveryPrice === 10) {
+            order.amount = order.prodamount + deliveryPrice - 10
+          } else {
+            order.amount = order.prodamount + deliveryPrice
+          }
+
+          deliveryValueElem.innerText =
+              deliveryPrice !== 10
+                  ? `${deliveryPrice.toLocaleString().split(",").join(" ")} р.`
+                  : " индивидуально";
+
+          totalSum.querySelector('input').value = deliveryPrice !== 10 ? deliveryPrice : 'индивидуально'
+
+          document.querySelector('.t706__cartwin-totalamount').innerText =
+              `${order.amount.toLocaleString().split(',').join(' ')} р.`
+        };
+
+        // Прослушиваемые элементы DOM-дерева
+        const popupOpenBtn = document.querySelector(".t744__btn");
+        const popupOpenCartBtn = document.querySelector(".t706__carticon");
+        const outerCalcElems = [popupOpenBtn, popupOpenCartBtn];
+        const calcRadioBtns = popup.querySelectorAll(
+            '.t-input-group_dl input[type="radio"]'
+        );
+
+        // Функция добавления прослушки событий
+        const addInnerEventListeners = () => {
+          calcRadioBtns.forEach((el) => {
+            el.addEventListener("change", calcDelivery);
+          });
+          setTimeout(() => {
+            let minusBtn = popup.querySelector(".t706__product-minus");
+            let plusBtn = popup.querySelector(".t706__product-plus");
+            document.querySelector(
+                ".t706__cartwin-totalamount-wrap"
+            ).style.display = "block";
+            plusBtn.addEventListener("click", calcDelivery);
+            minusBtn.addEventListener("click", calcDelivery);
+            calcDelivery();
+          }, 500);
+        };
+
+        // Прослушка событий
+        outerCalcElems.forEach((el) => {
+          el.addEventListener("click", addInnerEventListeners);
+        });
+      }, 500)
+  );
+
+</script>
